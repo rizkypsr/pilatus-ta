@@ -1,17 +1,38 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/foundation/key.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_blurhash/flutter_blurhash.dart';
+import 'package:pilatus/common/constants.dart';
+import 'package:pilatus/common/state_enum.dart';
 import 'package:pilatus/domain/entities/product.dart';
+import 'package:pilatus/presentation/provider/cart_notifier.dart';
 import 'package:pilatus/styles/colors.dart';
 import 'package:pilatus/styles/text_styles.dart';
 import 'package:pilatus/utils/currency_format.dart';
+import 'package:provider/provider.dart';
 
-class ProductDetailPage extends StatelessWidget {
+class ProductDetailPage extends StatefulWidget {
   const ProductDetailPage({Key? key, required this.product}) : super(key: key);
 
   final Product product;
+
+  @override
+  State<ProductDetailPage> createState() => _ProductDetailPageState();
+}
+
+class _ProductDetailPageState extends State<ProductDetailPage> {
+  Future<void> addToCart() async {
+    await Provider.of<CartNotifier>(context, listen: false)
+        .addProductToCart(widget.product.id!);
+
+    if (!mounted) return;
+    final message =
+        Provider.of<CartNotifier>(context, listen: false).addCartMessage;
+
+    if (message == CartNotifier.addToCartSuccessMessage) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,24 +54,25 @@ class ProductDetailPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
-                  CurrencyFormat.convertToIdr(product.price!, 0),
+                  CurrencyFormat.convertToIdr(widget.product.price!, 0),
                   style: heading3.copyWith(
                     fontSize: 16,
                   ),
                 ),
                 SizedBox(
-                  height: 40,
-                  child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        elevation: 0,
-                      ),
-                      onPressed: () => {},
-                      child: Text(
-                        'Masukkan ke Keranjang',
-                        style: paragraph2.copyWith(
-                            color: secondaryTextColor, fontSize: 14),
-                      )),
-                ),
+                    height: 40,
+                    child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          elevation: 0,
+                        ),
+                        onPressed: () {
+                          addToCart();
+                        },
+                        child: Text(
+                          'Masukkan ke Keranjang',
+                          style: paragraph2.copyWith(
+                              color: secondaryTextColor, fontSize: 14),
+                        ))),
               ],
             ),
           ),
@@ -61,7 +83,7 @@ class ProductDetailPage extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  product.name!,
+                  widget.product.name!,
                   style: heading3.copyWith(
                     fontSize: 22,
                   ),
@@ -70,7 +92,7 @@ class ProductDetailPage extends StatelessWidget {
                   height: 8,
                 ),
                 Text(
-                  CurrencyFormat.convertToIdr(product.price!, 0),
+                  CurrencyFormat.convertToIdr(widget.product.price!, 0),
                   style: heading3.copyWith(
                     fontSize: 16,
                   ),
@@ -81,7 +103,8 @@ class ProductDetailPage extends StatelessWidget {
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 32),
                   child: CachedNetworkImage(
-                    imageUrl: product.photo!,
+                    imageUrl:
+                        '$baseUrl/storage/products/${widget.product.photo}',
                     height: 300,
                     imageBuilder: (context, imageProvider) => Container(
                       decoration: BoxDecoration(
@@ -134,7 +157,7 @@ class ProductDetailPage extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              product.weight!.toString(),
+                              widget.product.weight!.toString(),
                               style: paragraph2.copyWith(
                                 fontSize: 14,
                               ),
@@ -162,7 +185,7 @@ class ProductDetailPage extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              product.categoryId.toString(),
+                              widget.product.category!.name!,
                               style: paragraph2.copyWith(
                                 fontSize: 14,
                               ),
@@ -206,7 +229,7 @@ class ProductDetailPage extends StatelessWidget {
                     child: Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          product.description!,
+                          widget.product.description!,
                           textAlign: TextAlign.justify,
                           style: paragraph1.copyWith(
                             fontSize: 14,

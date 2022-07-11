@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:pilatus/common/state_enum.dart';
+import 'package:pilatus/domain/entities/cart_item.dart';
+import 'package:pilatus/domain/entities/city.dart';
+import 'package:pilatus/domain/entities/cost.dart';
+import 'package:pilatus/domain/entities/province.dart';
+import 'package:pilatus/domain/entities/shipping.dart';
+import 'package:pilatus/presentation/provider/ongkir_notifier.dart';
+import 'package:pilatus/presentation/provider/order_notifier.dart';
 import 'package:pilatus/styles/colors.dart';
 import 'package:pilatus/styles/text_styles.dart';
+import 'package:provider/provider.dart';
 
 class CheckoutPage extends StatefulWidget {
-  const CheckoutPage({Key? key}) : super(key: key);
+  const CheckoutPage({Key? key, required this.cartItems}) : super(key: key);
+
+  final List<CartItem> cartItems;
 
   @override
   State<CheckoutPage> createState() => _CheckoutPageState();
@@ -32,6 +43,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
       ];
 
   @override
+  void initState() {
+    super.initState();
+    Future.microtask(() =>
+        Provider.of<OngkirNotifier>(context, listen: false)..fetchProvinces());
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
@@ -55,6 +73,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               steps: getSteps(),
               currentStep: currentStep,
               onStepContinue: () {
+                debugPrint('dsdsdsds sd s ds ds ds ds ds ds');
                 final isLastStep = currentStep == getSteps().length - 1;
 
                 if (!isLastStep) {
@@ -77,15 +96,49 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     children: <Widget>[
                       if (currentStep == 0)
                         Expanded(
-                          child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(elevation: 0),
-                              onPressed: controlDetails.onStepContinue,
-                              child: Text(
-                                'Proses Pembayaran',
-                                style: paragraph2.copyWith(
-                                    color: secondaryTextColor, fontSize: 14),
-                              )),
-                        ),
+                            child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(elevation: 0),
+                                onPressed: () {
+                                  final isLastStep =
+                                      currentStep == getSteps().length - 1;
+
+                                  var province = context
+                                      .read<OngkirNotifier>()
+                                      .provinceValue;
+                                  var city =
+                                      context.read<OngkirNotifier>().cityValue;
+                                  var ongkir = context
+                                      .read<OngkirNotifier>()
+                                      .ongkirValue;
+
+                                  var address = "address";
+                                  var postalCode = city.postalCode;
+                                  var courier = "JNE";
+                                  var service = ongkir.service;
+                                  var cost = ongkir.value;
+
+                                  Shipping shipping = Shipping(
+                                      address: address,
+                                      province: province.provinceName,
+                                      city: city.cityName,
+                                      postalCode: postalCode,
+                                      courier: courier,
+                                      service: service,
+                                      cost: cost);
+                                  context.read<OrderNotifier>().checkoutProduct(
+                                      shipping,
+                                      widget.cartItems[0].cart!.id!,
+                                      context);
+
+                                  if (!isLastStep) {
+                                    setState(() => {currentStep += 1});
+                                  }
+                                },
+                                child: Text(
+                                  'Proses Pembayaran',
+                                  style: paragraph2.copyWith(
+                                      color: secondaryTextColor, fontSize: 14),
+                                ))),
                       if (currentStep == 1)
                         Expanded(
                           child: ElevatedButton(
@@ -109,12 +162,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 }
 
-class DeliveryStep extends StatelessWidget {
+class DeliveryStep extends StatefulWidget {
   const DeliveryStep({Key? key}) : super(key: key);
 
   @override
+  State<DeliveryStep> createState() => _DeliveryStepState();
+}
+
+class _DeliveryStepState extends State<DeliveryStep> {
+  @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Align(
           alignment: Alignment.centerLeft,
@@ -128,66 +187,113 @@ class DeliveryStep extends StatelessWidget {
         const SizedBox(
           height: 14,
         ),
-        SizedBox(
-          width: double.infinity,
-          height: 40,
-          child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                elevation: 0,
-                side: const BorderSide(color: Colors.grey, width: .5),
-                primary: Colors.white,
+        Consumer<OngkirNotifier>(builder: (context, data, _) {
+          final state = data.provinceState;
+
+          if (state == RequestState.Loading) {
+            return const CircularProgressIndicator();
+          }
+
+          if (state == RequestState.Loaded) {
+            return DropdownButtonHideUnderline(
+                child: DropdownButton(
+              iconSize: 36,
+              icon: const Icon(
+                Icons.arrow_drop_down,
+                color: Color(0xff13A89E),
               ),
-              onPressed: () => {},
-              child: Text(
-                'Ubah Alamat',
-                style: paragraph2.copyWith(color: secondaryColor, fontSize: 14),
-              )),
-        ),
-        const SizedBox(
-          height: 24,
-        ),
-        Container(
-          height: 100,
-          padding: const EdgeInsets.all(14),
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: primaryColor.withOpacity(.1),
-            border: Border.all(
-              color: primaryColor,
-              width: .7,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Weli Febrianti',
-                style: paragraph2.copyWith(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
+              isExpanded: true,
+              value: data.provinceValue,
+              items: data.provinces.map((province) {
+                return DropdownMenuItem(
+                  value: province,
+                  child: Text(province.provinceName!),
+                );
+              }).toList(),
+              onChanged: (value) {
+                data.changeProvinceValue(value as Province);
+              },
+            ));
+          }
+
+          if (state == RequestState.Error) {
+            return Text(data.provinceMessage);
+          }
+
+          return const SizedBox();
+        }),
+        Consumer<OngkirNotifier>(builder: (context, data, _) {
+          final state = data.cityState;
+
+          if (state == RequestState.Loading) {
+            return const CircularProgressIndicator();
+          }
+
+          if (state == RequestState.Loaded) {
+            return DropdownButtonHideUnderline(
+                child: DropdownButton(
+              iconSize: 36,
+              icon: const Icon(
+                Icons.arrow_drop_down,
+                color: Color(0xff13A89E),
               ),
-              Text(
-                '+62 8988 8822 22',
-                style: paragraph2.copyWith(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
+              isExpanded: true,
+              value: data.cityValue,
+              items: data.cities.map((item) {
+                return DropdownMenuItem(
+                  value: item,
+                  child: Text(
+                      '${item.type} ${item.cityName} - ${item.postalCode}'),
+                );
+              }).toList(),
+              onChanged: (value) {
+                data.changeCityValue(value as City);
+              },
+            ));
+          }
+
+          if (state == RequestState.Error) {
+            return Text(data.provinceMessage);
+          }
+
+          return const SizedBox();
+        }),
+        Consumer<OngkirNotifier>(builder: (context, data, _) {
+          final state = data.ongkirState;
+
+          if (state == RequestState.Loading) {
+            return const CircularProgressIndicator();
+          }
+
+          if (state == RequestState.Loaded) {
+            return DropdownButtonHideUnderline(
+                child: DropdownButton(
+              iconSize: 36,
+              icon: const Icon(
+                Icons.arrow_drop_down,
+                color: Color(0xff13A89E),
               ),
-              const SizedBox(
-                height: 12,
-              ),
-              Text(
-                'Kalimantan Barat, Ketapang - Jalan Pancasila Gang Keadalian No 5 - RT 05, RW 005',
-                style: paragraph2.copyWith(
-                  fontSize: 12,
-                  color: secondaryLightColor,
-                  fontWeight: FontWeight.w600,
-                ),
-              )
-            ],
-          ),
-        )
+              isExpanded: true,
+              value: data.ongkirValue,
+              items: data.ongkir.costs.map((item) {
+                return DropdownMenuItem(
+                  value: item,
+                  child: Text(
+                      '${item.service} - ${item.value} (${item.etd} hari)'),
+                );
+              }).toList(),
+              onChanged: (value) {
+                data.changeOngkirValue(value as Cost);
+              },
+            ));
+          }
+
+          if (state == RequestState.Error) {
+            return Text(data.ongkirMessage);
+          }
+
+          return const SizedBox();
+        })
       ],
     );
   }
@@ -217,7 +323,8 @@ class OrderStep extends StatelessWidget {
           height: 12,
         ),
         Text(
-          'Selamat! Pesanan kamu telah berhasil',
+          'Selamat! Pesanan berhasil dibuat. Silahkan melakukan pembayaran',
+          textAlign: TextAlign.center,
           style: paragraph2,
         )
       ],

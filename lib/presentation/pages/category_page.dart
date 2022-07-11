@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:pilatus/common/state_enum.dart';
+import 'package:pilatus/domain/entities/category.dart';
 import 'package:pilatus/presentation/pages/category_detail_page.dart';
+import 'package:pilatus/presentation/provider/category_notifier.dart';
 import 'package:pilatus/styles/text_styles.dart';
+import 'package:provider/provider.dart';
 
-class CategoryPage extends StatelessWidget {
+class CategoryPage extends StatefulWidget {
   const CategoryPage({Key? key}) : super(key: key);
 
   static List<String> categories = [
@@ -10,6 +14,18 @@ class CategoryPage extends StatelessWidget {
     'Kategori 2',
     'Kategori 3',
   ];
+
+  @override
+  State<CategoryPage> createState() => _CategoryPageState();
+}
+
+class _CategoryPageState extends State<CategoryPage> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => Provider.of<CategoryNotifier>(context, listen: false)
+      ..fetchCategories());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,22 +41,42 @@ class CategoryPage extends StatelessWidget {
           backgroundColor: Colors.white,
           elevation: 0,
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(32),
-          child: ListView.builder(
-            itemCount: categories.length,
-            itemBuilder: (context, index) => CategoryListView(
-              category: categories[index],
-            ),
-          ),
-        ));
+        body: Consumer<CategoryNotifier>(builder: (context, data, _) {
+          final state = data.categoriesState;
+
+          if (state == RequestState.Loading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          if (state == RequestState.Error) {
+            return Center(
+              child: Text(data.message),
+            );
+          }
+
+          if (state == RequestState.Loaded) {
+            return Padding(
+              padding: const EdgeInsets.all(32),
+              child: ListView.builder(
+                itemCount: data.categories.length,
+                itemBuilder: (context, index) => CategoryListView(
+                  category: data.categories[index],
+                ),
+              ),
+            );
+          }
+
+          return const SizedBox();
+        }));
   }
 }
 
 class CategoryListView extends StatelessWidget {
   const CategoryListView({Key? key, required this.category}) : super(key: key);
 
-  final category;
+  final Category category;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +85,8 @@ class CategoryListView extends StatelessWidget {
         Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => CategoryDetailPage(),
+              builder: (context) =>
+                  CategoryDetailPage(categoryId: category.id!),
             ));
       },
       child: Container(
@@ -66,7 +103,7 @@ class CategoryListView extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         child: Text(
-          category,
+          category.name!,
           style: heading6,
         ),
       ),

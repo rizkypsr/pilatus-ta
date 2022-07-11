@@ -1,4 +1,4 @@
-package com.example.pilatus
+package com.pilatus
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -1,74 +1,34 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blurhash/flutter_blurhash.dart';
+import 'package:pilatus/common/constants.dart';
+import 'package:pilatus/common/state_enum.dart';
 import 'package:pilatus/domain/entities/product.dart';
+import 'package:pilatus/presentation/pages/product_detail_page.dart';
+import 'package:pilatus/presentation/provider/product_by_category_notifier.dart';
 import 'package:pilatus/styles/colors.dart';
 import 'package:pilatus/styles/text_styles.dart';
 import 'package:pilatus/utils/currency_format.dart';
+import 'package:provider/provider.dart';
 
-class CategoryDetailPage extends StatelessWidget {
-  final products = [
-    Product(
-        id: 1,
-        name: 'Produk 1',
-        photo:
-            "https://images.pexels.com/photos/3270223/pexels-photo-3270223.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-        description:
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. ',
-        categoryId: 1,
-        inventoryId: 1,
-        price: 30000,
-        weight: 0.5,
-        updatedAt: DateTime.now()),
-    Product(
-        id: 1,
-        name: 'Produk 1',
-        photo:
-            "https://images.pexels.com/photos/4202325/pexels-photo-4202325.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-        description:
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. ',
-        categoryId: 1,
-        inventoryId: 1,
-        price: 30000,
-        weight: 0.5,
-        updatedAt: DateTime.now()),
-    Product(
-        id: 1,
-        name: 'Produk 1',
-        photo:
-            "https://images.pexels.com/photos/3270223/pexels-photo-3270223.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-        description:
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. ',
-        categoryId: 1,
-        inventoryId: 1,
-        price: 30000,
-        weight: 0.5,
-        updatedAt: DateTime.now()),
-    Product(
-        id: 1,
-        name: 'Produk 1',
-        photo:
-            "https://images.pexels.com/photos/3270223/pexels-photo-3270223.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-        description:
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. ',
-        categoryId: 1,
-        inventoryId: 1,
-        price: 30000,
-        weight: 0.5,
-        updatedAt: DateTime.now()),
-    Product(
-        id: 1,
-        name: 'Produk 1',
-        photo:
-            "https://images.pexels.com/photos/3270223/pexels-photo-3270223.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-        description:
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. ',
-        categoryId: 1,
-        inventoryId: 1,
-        price: 30000,
-        weight: 0.5,
-        updatedAt: DateTime.now()),
-  ];
+class CategoryDetailPage extends StatefulWidget {
+  const CategoryDetailPage({Key? key, required this.categoryId})
+      : super(key: key);
+
+  final int categoryId;
+
+  @override
+  State<CategoryDetailPage> createState() => _CategoryDetailPageState();
+}
+
+class _CategoryDetailPageState extends State<CategoryDetailPage> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() =>
+        Provider.of<ProductByCategoryNotifier>(context, listen: false)
+          ..fetchProducts(widget.categoryId));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,14 +46,29 @@ class CategoryDetailPage extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
       ),
-      body: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-        child: ListView.builder(
-          itemCount: products.length,
-          itemBuilder: (context, index) => ProductListItem(
-            product: products[index],
-          ),
-        ),
+      body: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Consumer<ProductByCategoryNotifier>(builder: (context, data, _) {
+          final state = data.productsState;
+          if (state == RequestState.Loading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          } else if (state == RequestState.Loaded) {
+            return ListView.builder(
+              itemCount: data.products.length,
+              itemBuilder: (context, index) {
+                return ProductListItem(
+                  product: data.products[index],
+                );
+              },
+            );
+          } else if (state == RequestState.Error) {
+            return Center(child: Text(data.message));
+          } else {
+            return const Center(child: Text('Tidak ada produk'));
+          }
+        }),
       ),
     );
   }
@@ -114,61 +89,68 @@ class ProductListItem extends StatelessWidget {
         color: Colors.grey[100],
       ),
       height: 120,
-      child: Row(
-        children: [
-          CachedNetworkImage(
-            imageUrl: product.photo!,
-            width: 70,
-            fadeOutDuration: const Duration(milliseconds: 0),
-            fadeInDuration: const Duration(milliseconds: 0),
-            imageBuilder: (context, imageProvider) => Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                image: DecorationImage(
-                  image: imageProvider,
-                  fit: BoxFit.cover,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => ProductDetailPage(product: product)));
+        },
+        child: Row(
+          children: [
+            CachedNetworkImage(
+              imageUrl: '$baseUrl/storage/products/${product.photo}',
+              width: 70,
+              fadeOutDuration: const Duration(milliseconds: 0),
+              fadeInDuration: const Duration(milliseconds: 0),
+              imageBuilder: (context, imageProvider) => Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  image: DecorationImage(
+                    image: imageProvider,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
+              placeholder: (context, url) => BlurHash(hash: product.blurhash!),
+              errorWidget: (context, url, error) => const Icon(Icons.error),
             ),
-            placeholder: (context, url) =>
-                const BlurHash(hash: "LLKnJ7Mx_Nt8.8tRV@t7?bt8E1V?"),
-            errorWidget: (context, url, error) => const Icon(Icons.error),
-          ),
-          const SizedBox(
-            width: 20,
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Produk 1',
-                style: heading6.copyWith(
-                  fontWeight: FontWeight.w600,
+            const SizedBox(
+              width: 20,
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Produk 1',
+                  style: heading6.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              const SizedBox(
-                height: 12,
-              ),
-              Text(
-                'Weight: 1.2',
-                style: paragraph2.copyWith(
-                  color: secondaryLightColor.withOpacity(.60),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                const SizedBox(
+                  height: 12,
                 ),
-              ),
-              const SizedBox(
-                height: 12,
-              ),
-              Text(
-                CurrencyFormat.convertToIdr(35900, 0),
-                style: heading3.copyWith(
-                  fontSize: 16,
+                Text(
+                  'Weight: 1.2',
+                  style: paragraph2.copyWith(
+                    color: secondaryLightColor.withOpacity(.60),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-            ],
-          )
-        ],
+                const SizedBox(
+                  height: 12,
+                ),
+                Text(
+                  CurrencyFormat.convertToIdr(35900, 0),
+                  style: heading3.copyWith(
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            )
+          ],
+        ),
       ),
     );
   }

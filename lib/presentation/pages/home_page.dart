@@ -1,79 +1,31 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blurhash/flutter_blurhash.dart';
+import 'package:pilatus/common/constants.dart';
+import 'package:pilatus/common/state_enum.dart';
 import 'package:pilatus/domain/entities/product.dart';
 import 'package:pilatus/presentation/pages/cart_page.dart';
-import 'package:pilatus/presentation/pages/category_detail_page.dart';
 import 'package:pilatus/presentation/pages/product_detail_page.dart';
-import 'package:pilatus/styles/colors.dart';
+import 'package:pilatus/presentation/provider/product_list_notifier.dart';
 import 'package:pilatus/styles/text_styles.dart';
 import 'package:pilatus/utils/currency_format.dart';
+import 'package:provider/provider.dart';
 
-class HomePage extends StatelessWidget {
-  HomePage({Key? key}) : super(key: key);
+class HomePage extends StatefulWidget {
+  const HomePage({Key? key}) : super(key: key);
 
-  final products = [
-    Product(
-        id: 1,
-        name: 'Produk 1',
-        photo:
-            "https://images.pexels.com/photos/3270223/pexels-photo-3270223.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-        description:
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. ',
-        categoryId: 1,
-        inventoryId: 1,
-        price: 30000,
-        weight: 0.5,
-        updatedAt: DateTime.now()),
-    Product(
-        id: 1,
-        name: 'Produk 1',
-        photo:
-            "https://images.pexels.com/photos/4202325/pexels-photo-4202325.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-        description:
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. ',
-        categoryId: 1,
-        inventoryId: 1,
-        price: 30000,
-        weight: 0.5,
-        updatedAt: DateTime.now()),
-    Product(
-        id: 1,
-        name: 'Produk 1',
-        photo:
-            "https://images.pexels.com/photos/3270223/pexels-photo-3270223.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-        description:
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. ',
-        categoryId: 1,
-        inventoryId: 1,
-        price: 30000,
-        weight: 0.5,
-        updatedAt: DateTime.now()),
-    Product(
-        id: 1,
-        name: 'Produk 1',
-        photo:
-            "https://images.pexels.com/photos/3270223/pexels-photo-3270223.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-        description:
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. ',
-        categoryId: 1,
-        inventoryId: 1,
-        price: 30000,
-        weight: 0.5,
-        updatedAt: DateTime.now()),
-    Product(
-        id: 1,
-        name: 'Produk 1',
-        photo:
-            "https://images.pexels.com/photos/3270223/pexels-photo-3270223.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-        description:
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. ',
-        categoryId: 1,
-        inventoryId: 1,
-        price: 30000,
-        weight: 0.5,
-        updatedAt: DateTime.now()),
-  ];
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() =>
+        Provider.of<ProductListNotifier>(context, listen: false)
+          ..fetchProducts());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,128 +46,33 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Kategori 1',
-                    style: heading6,
-                  ),
-                  OutlinedButton(
-                      onPressed: () => {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => CategoryDetailPage(),
-                                ))
-                          },
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: const [
-                          Text(
-                            'Lihat',
-                            style: TextStyle(color: secondaryLightColor),
-                          ),
-                          Icon(
-                            Icons.keyboard_arrow_right_outlined,
-                            color: secondaryLightColor,
-                          )
-                        ],
-                      )),
-                ],
-              ),
-              SizedBox(
-                height: 190,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: products.length,
-                  itemBuilder: (context, index) {
-                    return ProductListItem(
-                      product: products[index],
-                    );
-                  },
-                ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Kategori 2',
-                    style: heading6,
-                  ),
-                  OutlinedButton(
-                      onPressed: () => {},
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: const [
-                          Text(
-                            'Lihat',
-                            style: TextStyle(color: secondaryLightColor),
-                          ),
-                          Icon(
-                            Icons.keyboard_arrow_right_outlined,
-                            color: secondaryLightColor,
-                          )
-                        ],
-                      )),
-                ],
-              ),
-              SizedBox(
-                height: 190,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: products.length,
-                  itemBuilder: (context, index) {
-                    return ProductListItem(
-                      product: products[index],
-                    );
-                  },
-                ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Kategori 1',
-                    style: heading6,
-                  ),
-                  OutlinedButton(
-                      onPressed: () => {},
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: const [
-                          Text(
-                            'Lihat',
-                            style: TextStyle(color: secondaryLightColor),
-                          ),
-                          Icon(
-                            Icons.keyboard_arrow_right_outlined,
-                            color: secondaryLightColor,
-                          )
-                        ],
-                      )),
-                ],
-              ),
-              SizedBox(
-                height: 190,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: products.length,
-                  itemBuilder: (context, index) {
-                    return ProductListItem(
-                      product: products[index],
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
+      body: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Consumer<ProductListNotifier>(builder: (context, data, child) {
+          final state = data.productsState;
+          if (state == RequestState.Loading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          } else if (state == RequestState.Loaded) {
+            return GridView.builder(
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 200,
+                  crossAxisSpacing: 15,
+                  mainAxisSpacing: 10),
+              itemCount: data.products.length,
+              itemBuilder: (context, index) {
+                return ProductListItem(
+                  product: data.products[index],
+                );
+              },
+            );
+          } else if (state == RequestState.Error) {
+            return Center(child: Text(data.message));
+          } else {
+            return Container();
+          }
+        }),
       ),
     );
   }
@@ -229,65 +86,82 @@ class ProductListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => {
+      onTap: () {
         Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => ProductDetailPage(product: product)))
+                builder: (context) => ProductDetailPage(product: product)));
       },
-      child: SizedBox(
-        width: 140,
-        child: Card(
-            child: Column(
-          children: [
-            CachedNetworkImage(
-              imageUrl: product.photo!,
-              height: 100,
-              fadeOutDuration: const Duration(milliseconds: 0),
-              fadeInDuration: const Duration(milliseconds: 0),
-              imageBuilder: (context, imageProvider) => Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: imageProvider,
-                    fit: BoxFit.cover,
+      child: Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+          child: Stack(
+            children: [
+              CachedNetworkImage(
+                imageUrl: '$baseUrl/storage/products/${product.photo}',
+                fadeOutDuration: const Duration(milliseconds: 0),
+                fadeInDuration: const Duration(milliseconds: 0),
+                imageBuilder: (context, imageProvider) => Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    image: DecorationImage(
+                      image: imageProvider,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                placeholder: (context, url) =>
+                    BlurHash(hash: product.blurhash!),
+                errorWidget: (context, url, error) => const Icon(Icons.error),
+              ),
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        product.name!,
+                        overflow: TextOverflow.ellipsis,
+                        style: paragraph2.copyWith(fontSize: 12),
+                      ),
+                      const SizedBox(
+                        height: 2,
+                      ),
+                      Text(
+                        CurrencyFormat.convertToIdr(product.price!, 0),
+                        style: heading6.copyWith(
+                            fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              placeholder: (context, url) =>
-                  const BlurHash(hash: "LLKnJ7Mx_Nt8.8tRV@t7?bt8E1V?"),
-              errorWidget: (context, url, error) => const Icon(Icons.error),
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 12),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  product.name!,
-                  style: heading6.copyWith(
-                      fontWeight: FontWeight.w700, fontSize: 14),
-                ),
-              ),
-            ),
-            const SizedBox(
-              height: 12,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 12),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  CurrencyFormat.convertToIdr(product.price!, 0),
-                  style: heading6.copyWith(
-                      fontWeight: FontWeight.bold, fontSize: 15),
-                ),
-              ),
-            )
-          ],
-        )),
-      ),
+              // const SizedBox(
+              //   height: 12,
+              // ),
+              // Padding(
+              //   padding: const EdgeInsets.only(left: 12),
+              //   child: Align(
+              //     alignment: Alignment.centerLeft,
+              //     child: Text(
+              //       CurrencyFormat.convertToIdr(product.price!, 0),
+              //       style: heading6.copyWith(
+              //           fontWeight: FontWeight.bold, fontSize: 15),
+              //     ),
+              //   ),
+              // )
+            ],
+          )),
     );
   }
 }
