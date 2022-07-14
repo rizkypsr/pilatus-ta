@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:pilatus/common/constants.dart';
 import 'package:pilatus/common/exception.dart';
 import 'package:pilatus/data/models/order_list_response.dart';
@@ -16,11 +17,14 @@ abstract class OrderRemoteDataSource {
 
 class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
   final http.Client client;
+  final FlutterSecureStorage storage;
 
-  OrderRemoteDataSourceImpl({required this.client});
+  OrderRemoteDataSourceImpl({required this.client, required this.storage});
 
   @override
   Future<OrderModel> checkout(Shipping shipping, int cartId) async {
+    final String? token = await storage.read(key: 'token');
+
     final body = json.encode({
       "address": shipping.address,
       "province": shipping.province,
@@ -48,6 +52,8 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
 
   @override
   Future<List<OrderModel>> getOrderByStatus(String status) async {
+    final String? token = await storage.read(key: 'token');
+
     final response =
         await client.get(Uri.parse('$baseUrlApi/orders/$status'), headers: {
       "Content-Type": "application/json",
@@ -63,6 +69,8 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
 
   @override
   Future<OrderModel> getOrder(String id) async {
+    final String? token = await storage.read(key: 'token');
+
     final response =
         await client.get(Uri.parse('$baseUrlApi/order/$id'), headers: {
       "Content-Type": "application/json",

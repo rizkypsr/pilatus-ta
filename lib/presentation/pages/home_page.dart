@@ -40,8 +40,8 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             icon: const Icon(Icons.shopping_cart_outlined),
             onPressed: () {
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => CartPage()));
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => const CartPage()));
             },
           ),
         ],
@@ -122,7 +122,8 @@ class ProductListItem extends StatelessWidget {
                 child: Container(
                   margin:
                       const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
-                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(10)),

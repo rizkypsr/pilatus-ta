@@ -3,13 +3,16 @@ import 'dart:convert';
 import 'package:authentication_provider/authentication_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl_standalone.dart';
+import 'package:pilatus/common/state_enum.dart';
 import 'package:pilatus/data/models/user_model.dart';
 import 'package:pilatus/presentation/pages/category_page.dart';
 import 'package:pilatus/presentation/pages/home_page.dart';
 import 'package:pilatus/presentation/pages/login.page.dart';
 import 'package:pilatus/presentation/pages/order_page.dart';
 import 'package:pilatus/presentation/pages/profile_page.dart';
+import 'package:pilatus/presentation/provider/auth_notifier.dart';
 import 'package:pilatus/presentation/provider/bottom_nav_provider.dart';
 import 'package:pilatus/presentation/provider/category_notifier.dart';
 import 'package:pilatus/presentation/provider/order_list_notifier.dart';
@@ -19,7 +22,6 @@ import 'package:pilatus/styles/colors.dart';
 import 'package:pilatus/styles/text_styles.dart';
 import 'package:pilatus/utils/firebase_dynamic_link_service.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pilatus/injection.dart' as di;
 import 'package:pilatus/presentation/provider/product_list_notifier.dart';
 import 'package:pilatus/presentation/provider/cart_notifier.dart';
@@ -40,28 +42,10 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  late AuthenticationController<UserModel> controller;
-  late SharedPreferences _preferences;
-
   @override
   void initState() {
     super.initState();
-    _initialize();
     FirebaseDynamicLinkService.initDynamicLink(context);
-  }
-
-  void _initialize() async {
-    controller = AuthenticationController<UserModel>(context);
-    _preferences = await SharedPreferences.getInstance();
-
-    checkAuthentication();
-  }
-
-  void checkAuthentication() async {
-    final String? userPref = _preferences.getString('user');
-    var user =
-        userPref != null ? UserModel.fromJson(jsonDecode(userPref)) : null;
-    controller.checkAuth(user: user);
   }
 
   @override
@@ -89,47 +73,44 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider(
           create: (_) => di.locator<ProductByCategoryNotifier>(),
         ),
+        ChangeNotifierProvider(
+          create: (_) => di.locator<AuthNotifier>()..checkAuth(),
+        ),
       ],
       child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'Pilatus Showroom',
-          theme: ThemeData()
-              .copyWith(textTheme: textTheme, colorScheme: colorScheme),
-          home: ChangeNotifierProvider<BottomNavigationBarProvider>(
-              create: (context) => BottomNavigationBarProvider(),
-              child: AuthenticationProvider<UserModel>(
-                  controller: controller,
-                  builder: (context) {
-                    var state =
-                        AuthenticationProvider.of<UserModel>(context)!.state;
-                    if (state is Loading) {
-                      return Scaffold(
-                        appBar: AppBar(
-                          title: const Text('Loading'),
-                        ),
-                        body: const Center(
-                          child: CircularProgressIndicator(),
-                        ),
-                      );
-                    } else if (state is Unauthenticated) {
-                      return LoginPage(
-                        controller: controller,
-                      );
-                    } else if (state is Authenticated<UserModel>) {
-                      return MainPage();
-                    }
-                    Future.delayed(const Duration(seconds: 1), () {
-                      controller.initialize();
-                    });
-                    return Scaffold(
-                      appBar: AppBar(
-                        title: const Text('Uninitialized'),
-                      ),
-                      body: const Center(
-                        child: Text(''),
-                      ),
-                    );
-                  }))),
+        debugShowCheckedModeBanner: false,
+        title: 'Pilatus Showroom',
+        theme: ThemeData()
+            .copyWith(textTheme: textTheme, colorScheme: colorScheme),
+        home: Consumer<AuthNotifier>(builder: (context, data, _) {
+          var state = data.authState;
+
+          if (state == AuthState.Loading) {
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Loading'),
+              ),
+              body: const Center(
+                child: CircularProgressIndicator(),
+              ),
+            );
+          } else if (state == AuthState.Erorr) {
+            Fluttertoast.showToast(
+                msg: data.message,
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.CENTER,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.red,
+                textColor: Colors.white,
+                fontSize: 16.0);
+          } else if (state == AuthState.Authenticated) {
+            return ChangeNotifierProvider<BottomNavigationBarProvider>(
+                create: (context) => BottomNavigationBarProvider(),
+                child: MainPage());
+          }
+          return LoginPage();
+        }),
+      ),
     );
   }
 }

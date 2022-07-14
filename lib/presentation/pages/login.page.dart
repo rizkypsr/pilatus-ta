@@ -1,13 +1,15 @@
-import 'package:authentication_provider/authentication_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:pilatus/data/models/user_model.dart';
+import 'package:pilatus/presentation/pages/register_page.dart';
+import 'package:pilatus/presentation/provider/auth_notifier.dart';
 import 'package:pilatus/styles/colors.dart';
 import 'package:pilatus/styles/text_styles.dart';
+import 'package:provider/provider.dart';
 
 class LoginPage extends StatelessWidget {
-  const LoginPage({Key? key, required this.controller}) : super(key: key);
+  LoginPage({Key? key}) : super(key: key);
 
-  final AuthenticationController<UserModel> controller;
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +34,7 @@ class LoginPage extends StatelessWidget {
                 height: 4,
               ),
               TextFormField(
+                controller: emailController,
                 style: paragraph2,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
@@ -56,6 +59,7 @@ class LoginPage extends StatelessWidget {
                 height: 4,
               ),
               TextFormField(
+                controller: passwordController,
                 style: paragraph2,
                 obscureText: true,
                 decoration: InputDecoration(
@@ -77,9 +81,8 @@ class LoginPage extends StatelessWidget {
                 child: ElevatedButton(
                     style: ElevatedButton.styleFrom(elevation: 0),
                     onPressed: () => {
-                          controller.authenticate(
-                              user: UserModel(
-                                  id: 1, name: 'name', email: 'email'))
+                          context.read<AuthNotifier>().loginUser(
+                              emailController.text, passwordController.text)
                         },
                     child: Text(
                       'Masuk',
@@ -93,7 +96,13 @@ class LoginPage extends StatelessWidget {
               Align(
                 alignment: Alignment.bottomCenter,
                 child: TextButton(
-                    onPressed: () => {},
+                    onPressed: () => {
+                          Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => RegisterPage(),
+                              ))
+                        },
                     child: Text(
                       'Buat Akun',
                       style: paragraph2.copyWith(
