@@ -33,7 +33,7 @@
                 <category android:name="android.intent.category.DEFAULT" /> 
                 <category android:name="android.intent.category.BROWSABLE" /> 
                 <!-- Accepts URIs that begin with YOUR_SCHEME://YOUR_HOST --> 
-                <data android:scheme="https" android:host="https://pilatus.page.link " /> 
+                <data android:scheme="https" android:host="https://pilatusshoroom.page.link " /> 
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

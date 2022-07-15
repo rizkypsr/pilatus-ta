@@ -7,6 +7,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl_standalone.dart';
 import 'package:pilatus/common/state_enum.dart';
 import 'package:pilatus/data/models/user_model.dart';
+import 'package:pilatus/firebase_options.dart';
 import 'package:pilatus/presentation/pages/category_page.dart';
 import 'package:pilatus/presentation/pages/home_page.dart';
 import 'package:pilatus/presentation/pages/login.page.dart';
@@ -18,9 +19,9 @@ import 'package:pilatus/presentation/provider/category_notifier.dart';
 import 'package:pilatus/presentation/provider/order_list_notifier.dart';
 import 'package:pilatus/presentation/provider/order_notifier.dart';
 import 'package:pilatus/presentation/provider/product_by_category_notifier.dart';
+import 'package:pilatus/presentation/provider/user_notifier.dart';
 import 'package:pilatus/styles/colors.dart';
 import 'package:pilatus/styles/text_styles.dart';
-import 'package:pilatus/utils/firebase_dynamic_link_service.dart';
 import 'package:provider/provider.dart';
 import 'package:pilatus/injection.dart' as di;
 import 'package:pilatus/presentation/provider/product_list_notifier.dart';
@@ -29,7 +30,10 @@ import 'package:pilatus/presentation/provider/ongkir_notifier.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    name: "Pilatus Showroom",
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   di.init();
   runApp(const MyApp());
 }
@@ -42,12 +46,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  @override
-  void initState() {
-    super.initState();
-    FirebaseDynamicLinkService.initDynamicLink(context);
-  }
-
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -75,6 +73,9 @@ class _MyAppState extends State<MyApp> {
         ),
         ChangeNotifierProvider(
           create: (_) => di.locator<AuthNotifier>()..checkAuth(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => di.locator<UserNotifier>(),
         ),
       ],
       child: MaterialApp(

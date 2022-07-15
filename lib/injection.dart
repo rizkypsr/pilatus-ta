@@ -6,19 +6,23 @@ import 'package:pilatus/data/datasources/category_remote_data_source.dart';
 import 'package:pilatus/data/datasources/ongkir_remote_data_source.dart';
 import 'package:pilatus/data/datasources/order_remote_data_source.dart';
 import 'package:pilatus/data/datasources/product_remote_data_source.dart';
+import 'package:pilatus/data/datasources/user_remote_data_source.dart';
 import 'package:pilatus/data/repositories/auth_repository_impl.dart';
 import 'package:pilatus/data/repositories/cart_repository_impl.dart';
 import 'package:pilatus/data/repositories/category_repository_impl.dart';
 import 'package:pilatus/data/repositories/ongkir_repository_impl.dart';
 import 'package:pilatus/data/repositories/order_repository_impl.dart';
 import 'package:pilatus/data/repositories/product_repository_impl.dart';
+import 'package:pilatus/data/repositories/user_repository_impl.dart';
 import 'package:pilatus/domain/repositories/auth_repository.dart';
 import 'package:pilatus/domain/repositories/cart_repository.dart';
 import 'package:pilatus/domain/repositories/category_repository.dart';
 import 'package:pilatus/domain/repositories/ongkir_repository.dart';
 import 'package:pilatus/domain/repositories/order_repository.dart';
 import 'package:pilatus/domain/repositories/product_repository.dart';
+import 'package:pilatus/domain/repositories/user_repository.dart';
 import 'package:pilatus/domain/usecases/add_to_cart.dart';
+import 'package:pilatus/domain/usecases/change_user.dart';
 import 'package:pilatus/domain/usecases/checkout.dart';
 import 'package:pilatus/domain/usecases/get_cart_items.dart';
 import 'package:pilatus/domain/usecases/get_categories.dart';
@@ -29,6 +33,7 @@ import 'package:pilatus/domain/usecases/get_order.dart';
 import 'package:pilatus/domain/usecases/get_product_by_category.dart';
 import 'package:pilatus/domain/usecases/get_products.dart';
 import 'package:pilatus/domain/usecases/get_provinces.dart';
+import 'package:pilatus/domain/usecases/get_user.dart';
 import 'package:pilatus/domain/usecases/login.dart';
 import 'package:pilatus/domain/usecases/logout.dart';
 import 'package:pilatus/domain/usecases/register.dart';
@@ -42,6 +47,7 @@ import 'package:pilatus/presentation/provider/order_notifier.dart';
 import 'package:pilatus/presentation/provider/product_by_category_notifier.dart';
 import 'package:pilatus/presentation/provider/product_list_notifier.dart';
 import 'package:http/http.dart' as http;
+import 'package:pilatus/presentation/provider/user_notifier.dart';
 
 final locator = GetIt.instance;
 
@@ -65,6 +71,8 @@ void init() {
       login: locator(),
       register: locator(),
       logout: locator()));
+  locator.registerFactory(
+      () => UserNotifier(getUser: locator(), changeUser: locator()));
 
   // use case
   locator.registerLazySingleton(() => GetProducts(locator()));
@@ -82,6 +90,8 @@ void init() {
   locator.registerLazySingleton(() => Login(locator()));
   locator.registerLazySingleton(() => Register(locator()));
   locator.registerLazySingleton(() => Logout(locator()));
+  locator.registerLazySingleton(() => GetUser(locator()));
+  locator.registerLazySingleton(() => ChangeUser(locator()));
 
   // repository
   locator.registerLazySingleton<ProductRepository>(
@@ -114,6 +124,11 @@ void init() {
       remoteDataSource: locator(),
     ),
   );
+  locator.registerLazySingleton<UserRepository>(
+    () => UserRepositoryImpl(
+      remoteDataSource: locator(),
+    ),
+  );
 
   // data sources
   locator.registerLazySingleton<ProductRemoteDataSource>(
@@ -128,6 +143,8 @@ void init() {
       CategoryRemoteDataSourceImpl(client: locator(), storage: locator()));
   locator.registerLazySingleton<AuthRemoteDataSource>(
       () => AuthRemoteDataSourceImpl(client: locator(), storage: locator()));
+  locator.registerLazySingleton<UserRemoteDataSource>(
+      () => UserRemoteDataSourceImpl(client: locator(), storage: locator()));
 
   // external
   locator.registerLazySingleton(() => http.Client());

@@ -10,6 +10,7 @@ import 'package:pilatus/presentation/provider/ongkir_notifier.dart';
 import 'package:pilatus/presentation/provider/order_notifier.dart';
 import 'package:pilatus/styles/colors.dart';
 import 'package:pilatus/styles/text_styles.dart';
+import 'package:pilatus/utils/firebase_dynamic_link_service.dart';
 import 'package:provider/provider.dart';
 
 class CheckoutPage extends StatefulWidget {

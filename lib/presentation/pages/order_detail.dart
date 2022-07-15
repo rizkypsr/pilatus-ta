@@ -4,18 +4,34 @@ import 'package:flutter_blurhash/flutter_blurhash.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:pilatus/common/constants.dart';
-import 'package:pilatus/domain/entities/order.dart';
+import 'package:pilatus/common/state_enum.dart';
 import 'package:pilatus/domain/entities/order_item.dart';
+import 'package:pilatus/presentation/provider/order_notifier.dart';
 import 'package:pilatus/styles/colors.dart';
 import 'package:pilatus/styles/text_styles.dart';
 import 'package:pilatus/utils/currency_format.dart';
 import 'package:pilatus/utils/get_payment_type.dart';
 import 'package:pilatus/utils/url_launch.dart';
+import 'package:provider/provider.dart';
 
-class OrderDetail extends StatelessWidget {
-  const OrderDetail({Key? key, required this.order}) : super(key: key);
+class OrderDetail extends StatefulWidget {
+  const OrderDetail({Key? key, required this.id}) : super(key: key);
 
-  final Orders order;
+  final String id;
+
+  @override
+  State<OrderDetail> createState() => _OrderDetailState();
+}
+
+class _OrderDetailState extends State<OrderDetail> {
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      Provider.of<OrderNotifier>(context, listen: false).fetchOrder(widget.id);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,291 +49,317 @@ class OrderDetail extends StatelessWidget {
       ),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(12),
-        child: SizedBox(
-            width: double.infinity,
-            height: 40,
-            child: order.status == "PENDING"
-                ? ElevatedButton(
-                    style: ElevatedButton.styleFrom(elevation: 0),
-                    onPressed: () => {UrlLaunch.launchURL(order.paymentUrl!)},
-                    child: Text(
-                      'Bayar Pesanan',
-                      style: paragraph2.copyWith(
-                          color: secondaryTextColor, fontSize: 14),
-                    ))
-                : const SizedBox()),
+        child: Consumer<OrderNotifier>(builder: (context, data, _) {
+          final state = data.orderState;
+
+          if (state == RequestState.Loaded) {
+            return SizedBox(
+                width: double.infinity,
+                height: 40,
+                child: data.order.status == "PENDING"
+                    ? ElevatedButton(
+                        style: ElevatedButton.styleFrom(elevation: 0),
+                        onPressed: () =>
+                            {UrlLaunch.launchURL(data.order.paymentUrl!)},
+                        child: Text(
+                          'Bayar Pesanan',
+                          style: paragraph2.copyWith(
+                              color: secondaryTextColor, fontSize: 14),
+                        ))
+                    : const SizedBox());
+          }
+
+          return const SizedBox();
+        }),
       ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(18),
-                color: Colors.white,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Wrap(
-                      spacing: 10,
-                      alignment: WrapAlignment.center,
+          child: Consumer<OrderNotifier>(builder: (context, data, _) {
+            final state = data.orderState;
+
+            if (state == RequestState.Loading) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+
+            if (state == RequestState.Loaded) {
+              return Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    color: Colors.white,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(FontAwesomeIcons.truckFast, size: 16),
-                        Text(
-                          'Informasi Pengiriman',
-                          style: heading6.copyWith(fontSize: 14),
-                        )
+                        Wrap(
+                          spacing: 10,
+                          alignment: WrapAlignment.center,
+                          children: [
+                            const Icon(FontAwesomeIcons.truckFast, size: 16),
+                            Text(
+                              'Informasi Pengiriman',
+                              style: heading6.copyWith(fontSize: 14),
+                            )
+                          ],
+                        ),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            data.order.shipping!.service!,
+                            style: paragraph2.copyWith(
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            data.order.shipping!.courier!,
+                            style: paragraph2.copyWith(
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 8,
+                        ),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            data.order.shipping!.resi ?? 'Belum Dikirim',
+                            style: paragraph2.copyWith(
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        order.shipping!.service!,
-                        style: paragraph2.copyWith(
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        order.shipping!.courier!,
-                        style: paragraph2.copyWith(
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 8,
-                    ),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        order.shipping!.resi ?? 'Belum Dikirim',
-                        style: paragraph2.copyWith(
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(
-                height: 12,
-              ),
-              Container(
-                color: Colors.white,
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(
-                      FontAwesomeIcons.locationDot,
-                      size: 16,
-                    ),
-                    const SizedBox(
-                      width: 12,
-                    ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Alamat Pengiriman',
-                            style: heading6.copyWith(
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 12,
-                          ),
-                          Text(
-                            order.user!.name!,
-                            style: paragraph2.copyWith(
-                              fontSize: 12,
-                              color: secondaryColor.withOpacity(.8),
-                            ),
-                          ),
-                          Text(
-                            '${order.shipping!.address!}, ${order.shipping!.city}, ${order.shipping!.province}, ID, ${order.shipping!.postalCode}',
-                            style: paragraph2.copyWith(
-                              fontSize: 12,
-                              color: secondaryColor.withOpacity(.8),
-                            ),
-                          )
-                        ],
-                      ),
-                    )
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: order.orderItem!.length,
-                  itemBuilder: (context, index) => OrderListItem(
-                    orderItem: order.orderItem![index],
                   ),
-                ),
-              ),
-              Container(
-                color: Colors.white,
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'Ongkir: ${CurrencyFormat.convertToIdr(order.shipping!.cost, 0)}',
-                      style: paragraph2.copyWith(
-                        fontSize: 12,
-                      ),
-                    ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        'Total: ${CurrencyFormat.convertToIdr(order.total, 0)}',
-                        style: heading6.copyWith(
-                            fontWeight: FontWeight.bold, fontSize: 15),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(
-                height: 12,
-              ),
-              order.payment != null
-                  ? Container(
-                      color: Colors.white,
-                      padding: const EdgeInsets.all(12),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(
-                            FontAwesomeIcons.creditCard,
-                            size: 16,
-                          ),
-                          const SizedBox(
-                            width: 12,
-                          ),
-                          Column(
+                  const SizedBox(
+                    height: 12,
+                  ),
+                  Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(
+                          FontAwesomeIcons.locationDot,
+                          size: 16,
+                        ),
+                        const SizedBox(
+                          width: 12,
+                        ),
+                        Expanded(
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Metode Pembayaran',
+                                'Alamat Pengiriman',
                                 style: heading6.copyWith(
                                   fontSize: 14,
                                 ),
                               ),
+                              const SizedBox(
+                                height: 12,
+                              ),
                               Text(
-                                'Bank Transfer - ${GetPaymentType.getStatus(order.payment!.provider!)}',
+                                data.order.user!.name!,
                                 style: paragraph2.copyWith(
                                   fontSize: 12,
+                                  color: secondaryColor.withOpacity(.8),
+                                ),
+                              ),
+                              Text(
+                                '${data.order.shipping!.address!}, ${data.order.shipping!.city}, ${data.order.shipping!.province}, ID, ${data.order.shipping!.postalCode}',
+                                style: paragraph2.copyWith(
+                                  fontSize: 12,
+                                  color: secondaryColor.withOpacity(.8),
                                 ),
                               )
                             ],
-                          )
-                        ],
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: data.order.orderItem!.length,
+                      itemBuilder: (context, index) => OrderListItem(
+                        orderItem: data.order.orderItem![index],
                       ),
-                    )
-                  : const SizedBox(),
-              order.payment != null
-                  ? const SizedBox(
-                      height: 12,
-                    )
-                  : const SizedBox(),
-              Container(
-                color: Colors.white,
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'No. Pesanan',
-                          style: heading6.copyWith(
-                            fontSize: 12,
-                          ),
-                        ),
-                        Text(
-                          order.id!,
-                          style: heading6.copyWith(
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
                     ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  ),
+                  Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          'Waktu Pemesanan',
+                          'Ongkir: ${CurrencyFormat.convertToIdr(data.order.shipping!.cost, 0)}',
                           style: paragraph2.copyWith(
                             fontSize: 12,
                           ),
                         ),
-                        Text(
-                          DateFormat.yMd()
-                              .add_jm()
-                              .format(
-                                  DateTime.parse(order.updatedAt.toString()))
-                              .toString(),
-                          style: paragraph2.copyWith(
-                            fontSize: 12,
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            'Total: ${CurrencyFormat.convertToIdr(data.order.total, 0)}',
+                            style: heading6.copyWith(
+                                fontWeight: FontWeight.bold, fontSize: 15),
                           ),
                         ),
                       ],
                     ),
-                    order.payment != null
-                        ? Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  ),
+                  const SizedBox(
+                    height: 12,
+                  ),
+                  data.order.payment != null
+                      ? Container(
+                          color: Colors.white,
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Waktu Pembayaran',
-                                style: paragraph2.copyWith(
-                                  fontSize: 12,
-                                ),
+                              const Icon(
+                                FontAwesomeIcons.creditCard,
+                                size: 16,
                               ),
-                              Text(
-                                DateFormat.yMd()
-                                    .add_jm()
-                                    .format(DateTime.parse(
-                                        order.payment!.updatedAt.toString()))
-                                    .toString(),
-                                style: paragraph2.copyWith(
-                                  fontSize: 12,
-                                ),
+                              const SizedBox(
+                                width: 12,
                               ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Metode Pembayaran',
+                                    style: heading6.copyWith(
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Bank Transfer - ${GetPaymentType.getStatus(data.order.payment!.provider!)}',
+                                    style: paragraph2.copyWith(
+                                      fontSize: 12,
+                                    ),
+                                  )
+                                ],
+                              )
                             ],
-                          )
-                        : const SizedBox(),
-                    order.shipping!.resi != null
-                        ? Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Waktu Pengiriman',
-                                style: paragraph2.copyWith(
-                                  fontSize: 12,
-                                ),
+                          ),
+                        )
+                      : const SizedBox(),
+                  data.order.payment != null
+                      ? const SizedBox(
+                          height: 12,
+                        )
+                      : const SizedBox(),
+                  Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'No. Pesanan',
+                              style: heading6.copyWith(
+                                fontSize: 12,
                               ),
-                              Text(
-                                order.shipping!.updatedAt!,
-                                style: paragraph2.copyWith(
-                                  fontSize: 12,
-                                ),
+                            ),
+                            Text(
+                              data.order.id!,
+                              style: heading6.copyWith(
+                                fontSize: 12,
                               ),
-                            ],
-                          )
-                        : const SizedBox()
-                  ],
-                ),
-              )
-            ],
-          ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Waktu Pemesanan',
+                              style: paragraph2.copyWith(
+                                fontSize: 12,
+                              ),
+                            ),
+                            Text(
+                              DateFormat.yMd()
+                                  .add_jm()
+                                  .format(DateTime.parse(
+                                      data.order.updatedAt.toString()))
+                                  .toString(),
+                              style: paragraph2.copyWith(
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                        data.order.payment != null
+                            ? Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Waktu Pembayaran',
+                                    style: paragraph2.copyWith(
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  Text(
+                                    DateFormat.yMd()
+                                        .add_jm()
+                                        .format(DateTime.parse(data
+                                            .order.payment!.updatedAt
+                                            .toString()))
+                                        .toString(),
+                                    style: paragraph2.copyWith(
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : const SizedBox(),
+                        data.order.shipping!.resi != null
+                            ? Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Waktu Pengiriman',
+                                    style: paragraph2.copyWith(
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  Text(
+                                    data.order.shipping!.updatedAt!,
+                                    style: paragraph2.copyWith(
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : const SizedBox()
+                      ],
+                    ),
+                  )
+                ],
+              );
+            }
+
+            return const SizedBox();
+          }),
         ),
       ),
     );

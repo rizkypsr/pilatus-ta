@@ -1,33 +1,33 @@
 {
   "project_info": {
-    "project_number": "464225216364",
-    "project_id": "pilatus-e6638",
-    "storage_bucket": "pilatus-e6638.appspot.com"
+    "project_number": "677884843970",
+    "project_id": "pilatus-22f43",
+    "storage_bucket": "pilatus-22f43.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:464225216364:android:0838a3d1c8168f719a7549",
+        "mobilesdk_app_id": "1:677884843970:android:04765049c3ad1bff68a85b",
         "android_client_info": {
           "package_name": "com.pilatus"
         }
       },
       "oauth_client": [
         {
-          "client_id": "464225216364-b90eqjn8v0ibr3o03v6uthft0o0f5odi.apps.googleusercontent.com",
+          "client_id": "677884843970-p0bdgdkbs1lvujrose2a1976nffnkd5f.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAVk0xiIaQCDDjJqNA-_eA6m7NPCKlTX2k"
+          "current_key": "AIzaSyCkeRX1e_ZsMjGT5CwgomFVE9yViNLHjaM"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "464225216364-b90eqjn8v0ibr3o03v6uthft0o0f5odi.apps.googleusercontent.com",
+              "client_id": "677884843970-p0bdgdkbs1lvujrose2a1976nffnkd5f.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:pilatus/common/state_enum.dart';
 import 'package:pilatus/domain/entities/order.dart';
 import 'package:pilatus/domain/entities/shipping.dart';
 import 'package:pilatus/domain/usecases/checkout.dart';
 import 'package:pilatus/domain/usecases/get_order.dart';
+import 'package:pilatus/utils/firebase_dynamic_link_service.dart';
 import 'package:pilatus/utils/url_launch.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class OrderNotifier extends ChangeNotifier {
   final Checkout checkout;
@@ -57,6 +56,7 @@ class OrderNotifier extends ChangeNotifier {
             .showSnackBar(SnackBar(content: Text(failure.message)));
       },
       (orderData) {
+        FirebaseDynamicLinkService.createDynamicLink(orderData);
         _checkoutState = RequestState.Loaded;
         notifyListeners();
         UrlLaunch.launchURL(orderData.paymentUrl!);

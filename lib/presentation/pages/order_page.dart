@@ -227,7 +227,7 @@ class OrderListItem extends StatelessWidget {
         Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => OrderDetail(order: order),
+              builder: (context) => OrderDetail(id: order.id!),
             ));
       },
       child: Container(

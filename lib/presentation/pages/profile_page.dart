@@ -1,16 +1,28 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_blurhash/flutter_blurhash.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pilatus/common/state_enum.dart';
 import 'package:pilatus/main.dart';
+import 'package:pilatus/presentation/pages/edit_profile_page.dart';
 import 'package:pilatus/presentation/provider/auth_notifier.dart';
+import 'package:pilatus/presentation/provider/user_notifier.dart';
 import 'package:pilatus/styles/text_styles.dart';
 import 'package:provider/provider.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<UserNotifier>(context, listen: false).fetchUser();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,49 +56,69 @@ class ProfilePage extends StatelessWidget {
           body: Container(
             width: double.infinity,
             padding: const EdgeInsets.all(32),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const Text('Rizky Pratama Syahrul Ramadhan'),
-                const SizedBox(
-                  height: 8,
-                ),
-                Text(
-                  'rizkypsrr@gmail.com',
-                  style: paragraph2.copyWith(),
-                ),
-                const SizedBox(
-                  height: 80,
-                ),
-                Container(
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    color: Colors.white,
-                  ),
-                  child: ListView(
-                    shrinkWrap: true,
-                    children: [
-                      SettingTile(
-                        title: "Ubah Profil",
-                        icon: FontAwesomeIcons.solidUser,
-                        onTap: () {},
+            child: Consumer<UserNotifier>(builder: (context, data, _) {
+              final state = data.userState;
+
+              if (state == RequestState.Loading) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+
+              if (state == RequestState.Loaded) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(data.user.name!),
+                    const SizedBox(
+                      height: 8,
+                    ),
+                    Text(
+                      data.user.email!,
+                      style: paragraph2.copyWith(),
+                    ),
+                    const SizedBox(
+                      height: 80,
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.white,
                       ),
-                      const SizedBox(
-                        height: 20,
+                      child: ListView(
+                        shrinkWrap: true,
+                        children: [
+                          SettingTile(
+                            title: "Ubah Profil",
+                            icon: FontAwesomeIcons.solidUser,
+                            onTap: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        EditProfilePage(name: data.user.name!),
+                                  ));
+                            },
+                          ),
+                          const SizedBox(
+                            height: 20,
+                          ),
+                          SettingTile(
+                            title: "Keluar",
+                            icon: FontAwesomeIcons.rightFromBracket,
+                            onTap: () {
+                              context.read<AuthNotifier>().logoutUser();
+                            },
+                          )
+                        ],
                       ),
-                      SettingTile(
-                        title: "Keluar",
-                        icon: FontAwesomeIcons.rightFromBracket,
-                        onTap: () {
-                          context.read<AuthNotifier>().logoutUser();
-                        },
-                      )
-                    ],
-                  ),
-                )
-              ],
-            ),
+                    )
+                  ],
+                );
+              }
+              return const SizedBox();
+            }),
           ),
         );
       },
@@ -134,7 +166,7 @@ class SettingTile extends StatelessWidget {
                 ),
               ],
             ),
-            FaIcon(
+            const FaIcon(
               FontAwesomeIcons.angleRight,
               size: 16,
             )
