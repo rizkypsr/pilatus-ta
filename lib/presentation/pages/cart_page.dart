@@ -233,18 +233,7 @@ class CartListItem extends StatelessWidget {
                 const SizedBox(
                   height: 24,
                 ),
-                SizedBox(
-                  height: 50,
-                  width: 140,
-                  child: SpinBox(
-                    min: 1,
-                    max: 100,
-                    value: cartItem.quantity!.toDouble(),
-                    showCursor: true,
-                    textAlign: TextAlign.center,
-                    onChanged: (value) => print(value),
-                  ),
-                ),
+                Text('x${cartItem.quantity!}')
               ],
             ),
           )
