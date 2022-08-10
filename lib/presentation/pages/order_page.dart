@@ -36,6 +36,11 @@ class _OrderPageState extends State<OrderPage> with TickerProviderStateMixin {
     )),
     Tab(
         child: Text(
+      'Dikirim',
+      style: paragraph2,
+    )),
+    Tab(
+        child: Text(
       'Selesai',
       style: paragraph2,
     )),
@@ -44,13 +49,14 @@ class _OrderPageState extends State<OrderPage> with TickerProviderStateMixin {
   static const List<Widget> _views = [
     UnpaidTabView(),
     ProccessTabView(),
+    SentTabView(),
     CancelledTabView()
   ];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _tabController.animateTo(2);
   }
 
@@ -140,7 +146,51 @@ class _ProccessTabViewState extends State<ProccessTabView> {
     super.initState();
     Future.microtask(() =>
         Provider.of<OrderListNotifier>(context, listen: false)
-          ..fetchOrders("SUCCESS"));
+          ..fetchOrders("PROCCESSED"));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Consumer<OrderListNotifier>(builder: (context, data, _) {
+        final state = data.ordersState;
+
+        if (state == RequestState.Loading) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+
+        if (state == RequestState.Loaded) {
+          return ListView.builder(
+            itemCount: data.orders.length,
+            itemBuilder: (context, index) => OrderListItem(
+              order: data.orders[index],
+            ),
+          );
+        }
+
+        return const SizedBox();
+      }),
+    );
+  }
+}
+
+class SentTabView extends StatefulWidget {
+  const SentTabView({Key? key}) : super(key: key);
+
+  @override
+  State<SentTabView> createState() => _SentTabViewState();
+}
+
+class _SentTabViewState extends State<SentTabView> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() =>
+        Provider.of<OrderListNotifier>(context, listen: false)
+          ..fetchOrders("DELIVERED"));
   }
 
   @override

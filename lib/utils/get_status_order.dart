@@ -3,6 +3,10 @@ class GetStatusOrder {
     switch (status) {
       case "PENDING":
         return "Belum Dibayar";
+      case "PROCCESSED":
+        return "Sedang Diproses";
+      case "DELIVERED":
+        return "Sedang Dikirim";
       case "SUCCESS":
         return "Berhasil";
       default:

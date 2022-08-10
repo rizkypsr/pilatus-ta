@@ -10,7 +10,6 @@ import 'package:pilatus/presentation/provider/ongkir_notifier.dart';
 import 'package:pilatus/presentation/provider/order_notifier.dart';
 import 'package:pilatus/styles/colors.dart';
 import 'package:pilatus/styles/text_styles.dart';
-import 'package:pilatus/utils/firebase_dynamic_link_service.dart';
 import 'package:provider/provider.dart';
 
 class CheckoutPage extends StatefulWidget {
@@ -24,6 +23,7 @@ class CheckoutPage extends StatefulWidget {
 
 class _CheckoutPageState extends State<CheckoutPage> {
   int currentStep = 0;
+  final TextEditingController _addressController = TextEditingController();
 
   List<Step> getSteps() => [
         Step(
@@ -33,7 +33,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
             ),
             state: currentStep > 0 ? StepState.complete : StepState.indexed,
             isActive: currentStep >= 0,
-            content: const DeliveryStep()),
+            content: DeliveryStep(
+              addressController: _addressController,
+            )),
         Step(
             title: Text(
               'Selesaikan Pesanan',
@@ -112,7 +114,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                       .read<OngkirNotifier>()
                                       .ongkirValue;
 
-                                  var address = "address";
+                                  var address = _addressController.text;
                                   var postalCode = city.postalCode;
                                   var courier = "JNE";
                                   var service = ongkir.service;
@@ -164,7 +166,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
 }
 
 class DeliveryStep extends StatefulWidget {
-  const DeliveryStep({Key? key}) : super(key: key);
+  const DeliveryStep({Key? key, required this.addressController})
+      : super(key: key);
+
+  final TextEditingController addressController;
 
   @override
   State<DeliveryStep> createState() => _DeliveryStepState();
@@ -184,6 +189,23 @@ class _DeliveryStepState extends State<DeliveryStep> {
               fontWeight: FontWeight.w600,
             ),
           ),
+        ),
+        const SizedBox(
+          height: 14,
+        ),
+        TextFormField(
+          controller: widget.addressController,
+          style: paragraph2,
+          keyboardType: TextInputType.streetAddress,
+          maxLines: 3,
+          decoration: InputDecoration(
+              hintStyle:
+                  paragraph2.copyWith(color: secondaryLightColor, fontSize: 14),
+              hintText: 'Masukan alamat kamu',
+              filled: true,
+              border: const OutlineInputBorder(),
+              focusedBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(color: secondaryDarkColor))),
         ),
         const SizedBox(
           height: 14,
